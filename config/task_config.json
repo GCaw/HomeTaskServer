@@ -1,0 +1,68 @@
+{
+  "tasks": [
+    {
+		"name": "inside_temp",
+		"type": "in_temp",
+		"freq": "5",
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+    },
+    {
+		"name": "outside_temp",
+		"type": "out_temp",
+		"freq": "20",
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+    },
+    {
+		"name": "inside_c02",
+		"type": "in_c02",
+		"freq": "5",
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+    },
+    {
+		"name": "nas_wolan_wk",
+		"type": "nas_wake",
+		"freq": null,
+		"start": "01:00",
+		"end": null,
+		"days": [0,1,1,1,1,1,0]
+    },
+    {
+		"name": "nas_smart",
+		"type": "nas_hdd",
+		"freq": null,
+		"start": "04:00",
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+    },
+    {
+		"name": "nas_sleep",
+		"type": "nas_slp",
+		"freq": null,
+		"start": "07:30",
+		"end": null,
+		"days": [1,1,1,1,1,0,0]
+	},
+	{
+		"name": "express_entry",
+		"type": "exp_entr",
+		"freq": 30,
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+	},
+	{
+		"name": "check_extern_ip",
+		"type": "chck_ip",
+		"freq": 30,
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+	}
+  ]
+}

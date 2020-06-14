@@ -131,3 +131,4 @@ tasks/web_ip.txt
 tasks/nas_ssh_key
 tasks/config.py
 tasks/can_exp.txt
+.vscode/settings.json
