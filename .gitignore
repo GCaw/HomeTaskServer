@@ -127,3 +127,7 @@ c02.html
 index.php
 index_expose.php
 temperatures.html
+tasks/web_ip.txt
+tasks/nas_ssh_key
+tasks/config.py
+tasks/can_exp.txt
