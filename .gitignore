@@ -123,3 +123,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+c02.html
+index.php
+index_expose.php
+temperatures.html
