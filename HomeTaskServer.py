@@ -3,14 +3,10 @@ import cherrypy
 import datetime
 import sys
 import threading
+import importlib
 from os import path
 
 from tasks.task_base import BaseTask
-from tasks.task_onlineweather import OutsideTempTask
-from tasks.task_localenvironment import IndoorTempPressTask, IndoorCO2
-from tasks.task_expressentry import CandaInstructionTask
-from tasks.task_nas import NasWake, NasCheckSmart, NasShutdown
-from tasks.task_checkip import UpdateIP
 
 CHERRY_SERVER_CFG = path.join("conf","cherry_config.conf")
 CHERRY_SERVER_EXP_CFG = path.join("conf","cherry_expose_config.conf")
@@ -122,8 +118,21 @@ def load_tasks():
     with open(TASK_JSON_CFG, 'r') as f:
         task_info = json.load(f)
 
-    # Create all our tasks, switch different HomeTasker Children
+    # Create all our tasks dynamically
     for i in range(len(task_info["tasks"])):
+        try:
+            # import module specified in json
+            mod = importlib.import_module(task_info["tasks"][i]["module"])
+            # Get the class from the module
+            task = getattr(mod,task_info["tasks"][i]["class"])
+            # and add the task to the task list
+            tasks.append(task(task_info["tasks"][i]))
+
+        except Exception as e:
+            tasks.append(BaseTask(task_info["tasks"][i]["name"]))
+            print("Error importing %s: %s" % task_info["tasks"][i]["module"], e)
+
+'''
         if (task_info["tasks"][i]["type"] == 'out_temp'):
             tasks.append(OutsideTempTask(task_info["tasks"][i]))
         elif (task_info["tasks"][i]["type"] == 'in_temp'):
@@ -141,7 +150,7 @@ def load_tasks():
         elif (task_info["tasks"][i]["type"] == 'chck_ip'):
             tasks.append(UpdateIP(task_info["tasks"][i]))
         else:
-            tasks.append(BaseTask(task_info["tasks"][i]))
+            tasks.append(BaseTask(task_info["tasks"][i]))'''
 
 def start_local_server():
     # Start our local server and hope for the best
@@ -149,7 +158,7 @@ def start_local_server():
     start_all_tasks()
     generate_frontend_local(tasks)
 
-    local_conf = os.path.join(os.path.dirname(__file__), CHERRY_SERVER_CFG)
+    local_conf = path.join(path.dirname(__file__), CHERRY_SERVER_CFG)
     cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
     cherrypy.quickstart(LocalFrontEnd(), config=local_conf)
 
@@ -157,18 +166,22 @@ def start_exposed_server():
     # Start our external server
     generate_frontend_external()
 
-    conf = os.path.join(os.path.dirname(__file__), CHERRY_SERVER_EXP_CFG)
+    conf = path.join(path.dirname(__file__), CHERRY_SERVER_EXP_CFG)
     cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
     cherrypy.quickstart(ExposedFrontEnd(), config=conf)
 
 if __name__ == '__main__':
     try:
         if (sys.argv[1] == 'expose'):
+            print("Starting External Server")
             exposed_server = threading.Thread(target=start_exposed_server, daemon=True)
             exposed_server.start()
+            print("Starting Local Server")
+            start_local_server
         else:
+            print("Starting Local Server Only")
             start_local_server()
     
     except IndexError as e:
-        print("arg not provided")
+        print("Starting Local Server Only")
         start_local_server()
