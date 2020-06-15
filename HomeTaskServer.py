@@ -2,18 +2,15 @@ import json
 import cherrypy
 import datetime
 import sys
-import threading
 import importlib
+import subprocess
 from os import path
 
 from tasks.task_base import BaseTask
 
-CHERRY_SERVER_CFG = path.join("conf","cherry_config.conf")
-CHERRY_SERVER_EXP_CFG = path.join("conf","cherry_expose_config.conf")
-
-TASK_JSON_CFG = path.join("conf","task_config.json")
+CHERRY_SERVER_CFG = path.join("config","cherry_config.conf")
+TASK_JSON_CFG = path.join("config","task_config.json")
 HOMEPAGE = path.join("generated_files","index.php")
-HOMEPAGE_EXP = path.join("generated_files","index_expose.php")
 
 tasks = []
 
@@ -38,45 +35,17 @@ class LocalFrontEnd:
 
     @cherrypy.expose
     def temperatures(self):
-        return open("temperatures.html")
+        return open(path.join("generated_files","temperatures.html"))
 
     @cherrypy.expose
     def co2(self):
-        return open("co2.html")
-
-class ExposedFrontEnd:
-    """ This is the server we expose to the WWW """
-    
-    @cherrypy.expose
-    def index(self, cmd=None, task=None):
-        """ home page """
-        generate_frontend_external()
-        return open(HOMEPAGE_EXP)
-
-    @cherrypy.expose
-    def temperatures(self):
-        return open("temperatures.html")
-
-    @cherrypy.expose
-    def co2(self):
-        return open("c02.html")
+        return open(path.join("generated_files","co2.html"))
 
 def secureheaders():
     headers = cherrypy.response.headers
     headers['X-Frame-Options'] = 'DENY'
     headers['X-XSS-Protection'] = '1; mode=block'
     headers['Content-Security-Policy'] = "default-src='self'"
-
-def generate_frontend_external():
-    """ Once the tasks are all loaded, create a home page with their data """
-    now = datetime.datetime.utcnow()
-    
-    with open(HOMEPAGE_EXP,"w") as f:
-        f.write('<!DOCTYPE html><html lang="en"><body>')
-        f.write('UTC Time: %s <br><br>' % str(now))
-        f.write('<br><br><a href="/">Reload</a> . . . . . . . <a href="temperatures">Temp Graph</a> . . . . .  . . . . . <a href="co2">CO2 Graph</a>')
-        f.write('<br><br>')
-        f.write('</body></html>')
 
 def generate_frontend_local(tasks):
     """ We generate this homepage to show up to date task info """
@@ -132,26 +101,6 @@ def load_tasks():
             tasks.append(BaseTask(task_info["tasks"][i]["name"]))
             print("Error importing %s: %s" % task_info["tasks"][i]["module"], e)
 
-'''
-        if (task_info["tasks"][i]["type"] == 'out_temp'):
-            tasks.append(OutsideTempTask(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'in_temp'):
-            tasks.append(IndoorTempPressTask(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'exp_entr'):
-            tasks.append(CandaInstructionTask(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'nas_wake'):
-            tasks.append(NasWake(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'nas_hdd'):
-            tasks.append(NasCheckSmart(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'nas_slp'):
-            tasks.append(NasShutdown(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'in_c02'):
-            tasks.append(IndoorCO2(task_info["tasks"][i]))
-        elif (task_info["tasks"][i]["type"] == 'chck_ip'):
-            tasks.append(UpdateIP(task_info["tasks"][i]))
-        else:
-            tasks.append(BaseTask(task_info["tasks"][i]))'''
-
 def start_local_server():
     # Start our local server and hope for the best
     load_tasks()
@@ -162,26 +111,11 @@ def start_local_server():
     cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
     cherrypy.quickstart(LocalFrontEnd(), config=local_conf)
 
-def start_exposed_server():
-    # Start our external server
-    generate_frontend_external()
-
-    conf = path.join(path.dirname(__file__), CHERRY_SERVER_EXP_CFG)
-    cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
-    cherrypy.quickstart(ExposedFrontEnd(), config=conf)
-
 if __name__ == '__main__':
-    try:
-        if (sys.argv[1] == 'expose'):
-            print("Starting External Server")
-            exposed_server = threading.Thread(target=start_exposed_server, daemon=True)
-            exposed_server.start()
-            print("Starting Local Server")
-            start_local_server
-        else:
-            print("Starting Local Server Only")
-            start_local_server()
-    
-    except IndexError as e:
-        print("Starting Local Server Only")
-        start_local_server()
+
+    for i in range(len(sys.argv)):
+        if (sys.argv[i] == "--expose"):
+            p = subprocess.Popen(['python', 'HomeTaskServerExtern.py'])
+                
+    print("Starting Local Server")
+    start_local_server()
