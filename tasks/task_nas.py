@@ -4,10 +4,10 @@ import paramiko
 from wakeonlan import send_magic_packet
 from time import sleep
 
-from tasks.task_base import GenericTask
+from tasks.task_base import BaseTask
 from tasks.config import NAS_MAC_ADDRESS, NAS_IP_ADDRESS, NAS_SSH_USERNAME, NAS_SSH_PASSWORD
 
-class NasWake(GenericTask):
+class NasWake(BaseTask):
     """
     Task to send a wake on lan command to local NAS.
     """
@@ -43,7 +43,7 @@ class NasWake(GenericTask):
                 self.last_result = "NAS woken up"
 
 
-class NasCheckSmart(GenericTask):
+class NasCheckSmart(BaseTask):
     """
     Task to check NAS SMART data
     """
@@ -65,7 +65,7 @@ class NasCheckSmart(GenericTask):
         res = client.exec_command()
         res[1].read()
 
-class NasShutdown(GenericTask):
+class NasShutdown(BaseTask):
     """
     Task to trigger a shutdown command on local NAS
     """

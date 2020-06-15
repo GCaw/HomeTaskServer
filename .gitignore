@@ -132,3 +132,4 @@ tasks/nas_ssh_key
 tasks/config.py
 tasks/can_exp.txt
 .vscode/settings.json
+tasks/cloudflare_api

@@ -2,7 +2,7 @@ import json
 import serial
 from datetime import datetime
 
-from tasks.task_base import GenericTask
+from tasks.task_base import BaseTask
 from tasks.helper import IssueSqlRequest
 
 try:
@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     bmp180 = None
     print("Running mock bmp180")    
     
-class IndoorTempPressTask(GenericTask):
+class IndoorTempPressTask(BaseTask):
     """
     Task to read data from i2c connected Temperature/Pressure sensor
     """
@@ -46,7 +46,7 @@ class IndoorTempPressTask(GenericTask):
                     "VALUES (NULL, '%s','%f','3','inside_press','degC')" % (now, tnp[1]))
         IssueSqlRequest(request)
 
-class IndoorCO2(HomeTask):
+class IndoorCO2(BaseTask):
     """
     Task to read serial data from attached C02 sensor
     """

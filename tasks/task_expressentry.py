@@ -1,5 +1,6 @@
 import smtplib
 from html.parser import HTMLParser
+from os import path
 
 from tasks.task_base import BaseTask
 from tasks.helper import IssueHttpRequest, SendMail
@@ -51,11 +52,11 @@ class CandaInstructionTask(BaseTask):
             print(self.last_result)
 
     def _read_last_can_exp(self):
-        with open("tasks/can_exp.txt", "r") as f:
+        with open(path.join("tasks","can_exp.txt"), "r") as f:
             self.last_instruct = int(f.read())
 
     def _write_last_can_exp(self):
-        with open("tasks/can_exp.txt", "w") as f:
+        with open(path.join("tasks","can_exp.txt"), "w") as f:
             f.write(str(self.last_instruct))
         
     def _parse_result(self, html):
