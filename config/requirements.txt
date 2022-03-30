@@ -2,7 +2,7 @@ CherryPy==18.6.0
 plotly==4.6.0
 wakeonlan==1.1.6
 ping3==2.6.1
-paramiko==2.7.1
+paramiko==2.10.1
 pyserial==3.4
 requests==2.21.0
 mysql-connector==2.2.9
