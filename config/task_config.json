@@ -55,15 +55,6 @@
 		"days": [1,1,1,1,1,0,0]
 	},
 	{
-		"name": "express_entry",
-		"class": "CandaInstructionTask",
-		"module": "tasks.task_expressentry",
-		"freq": 30,
-		"start": null,
-		"end": null,
-		"days": [1,1,1,1,1,1,1]
-	},
-	{
 		"name": "check_extern_ip",
 		"class": "UpdateIP",
 		"module": "tasks.task_checkip",
