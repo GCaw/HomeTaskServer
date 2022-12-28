@@ -23,12 +23,12 @@ class UpdateIP(BaseTask):
         if (res):
             if not (res.text == old):
                 
-                if SendMail(MAIL_ADMIN, "New Home IP Address", ("new: %s\nold: %s" % (res, old))):
-                    self.last_result = ("New IP: %s" % res)
+                if SendMail(MAIL_ADMIN, "New Home IP Address", ("new: %s\nold: %s" % (res.text, old))):
+                    self.last_result = ("New IP: %s" % res.text)
                     with open(path.join("tasks","web_ip.txt"), "w") as f:
-                        f.write(res)
+                        f.write(res.text)
                 else:
                     
-                    self.last_result = "Failed to send new IP: %s" % res
+                    self.last_result = "Failed to send new IP: %s" % res.text
             else:
                 self.last_result = ("Current IP maintained: %s" % old)
