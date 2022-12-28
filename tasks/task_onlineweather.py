@@ -1,7 +1,8 @@
 import json
 import plotly.express as px
 import plotly.offline as po
-from datetime import datetime
+from datetime import datetime, timedelta
+from time import altzone
 from os import path
 
 from tasks.task_base import BaseTask
@@ -26,11 +27,11 @@ class OutsideTempTask(BaseTask):
         else:
             print("Ouside Temp: %.1f" % self.last_result)
             self._save_temp()
-        self._plot_temp_press()
+        self._plot_temp_press(TEMP_GRAPH_PATH)
         self._plot_co2()
         self.counter += 1
         if (self.counter > 30):
-            self._plot_temp_press_wk()
+            self._plot_temp_press(TEMP_GRAPH_LONG_PATH, 7)
             self.counter = 0
 
         
@@ -58,30 +59,37 @@ class OutsideTempTask(BaseTask):
     def _ConvertKelvinToCelcius(self, temp):
         return temp - 273.15
         
-    def _plot_temp_press(days=1):
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        request = ("SELECT * FROM `environment` WHERE `type` = 1 OR `type` = 2 OR `type` = 5 ORDER BY `datetime` DESC LIMIT 648")
+    def _plot_temp_press(self, plot_path, days_back=1):
+        start_time = datetime.utcnow() - timedelta(days=days_back)
+        start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        # 1, 2, 5 are rasp_pi, internet weather, wifi_temp
+        request = (f"SELECT * FROM `environment` WHERE (`type` = 1 OR `type` = 2 OR `type` = 5) AND `datetime` > '{start_time}' ORDER BY `datetime`")
         temps = SelectSqlRequest(request)
 
-        request = ("SELECT * FROM `environment` WHERE `type` = 3 ORDER BY `datetime` DESC LIMIT 288")
+        # pressure not currently used
+        request = (f"SELECT * FROM `environment` WHERE `type` = 3  AND `datetime` > '{start_time}' ORDER BY `datetime`")
         ind_press = SelectSqlRequest(request)
 
-        fig = px.scatter(x=[a[1] for a in temps],y=[b[2] for b in temps], color=[c[4] for c in temps])
-        po.plot(fig, filename=TEMP_GRAPH_PATH,auto_open=False)
-        
-    def _plot_temp_press_wk(weeks=1):
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        request = ("SELECT * FROM `environment` WHERE `type` = 1 OR `type` = 2 OR `type` = 5 ORDER BY `datetime` DESC LIMIT 4536")
-        temps = SelectSqlRequest(request)
+        fig = px.scatter(x=[(a[1] + self._offset_time()) for a in temps],y=[b[2] for b in temps], color=[c[4] for c in temps])
+        new_names = {'inside_temp':'office', 'bedroom_temp':'lounge', 'OutsideTemp':'outside'}
+        fig.for_each_trace(lambda t: t.update(name = new_names[t.name],
+                                              legendgroup = new_names[t.name],
+                                              hovertemplate = t.hovertemplate.replace(t.name, new_names[t.name])))
+        po.plot(fig, filename=plot_path, auto_open=False)
 
-
-        fig = px.scatter(x=[a[1] for a in temps],y=[b[2] for b in temps], color=[c[4] for c in temps])
-        po.plot(fig, filename=TEMP_GRAPH_LONG_PATH,auto_open=False)
-
-    def _plot_co2(days=1):
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        request = ("SELECT * FROM `environment` WHERE `type` = 4 ORDER BY `datetime` DESC LIMIT 288")
+    def _plot_co2(self, days_back=1):
+        start_time = datetime.utcnow() - timedelta(days=days_back)
+        start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
+        request = (f"SELECT * FROM `environment` WHERE `type` = 4 AND `datetime` > '{start_time}' ORDER BY `datetime`")
         c02 = SelectSqlRequest(request)
 
-        fig = px.scatter(x=[a[1] for a in c02],y=[b[2] for b in c02], color=[c[4] for c in c02])
-        po.plot(fig, filename=C02_GRAPH_PATH,auto_open=False)
+        fig = px.scatter(x=[(a[1]+ self._offset_time()) for a in c02],y=[b[2] for b in c02], color=[c[4] for c in c02])
+        po.plot(fig, filename=C02_GRAPH_PATH, auto_open=False)
+
+    def _offset_time(self, hour_offset=None):
+        if not hour_offset:
+            offset = timedelta(seconds = -altzone)
+        else:
+            offset = timedelta(hours = hour_offset)
+        return offset
