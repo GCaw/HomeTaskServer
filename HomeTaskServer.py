@@ -36,10 +36,25 @@ class LocalFrontEnd:
     @cherrypy.expose
     def temperatures(self):
         return open(path.join("generated_files","temperatures.html"))
+    
+    @cherrypy.expose
+    def temperatures_long(self):
+        return open(path.join("generated_files","temperatures_long.html"))
 
     @cherrypy.expose
     def co2(self):
         return open(path.join("generated_files","co2.html"))
+    
+    @cherrypy.expose
+    def record_temp(self, temp, crypto):
+        if (crypto == 'aawqpeiorj2590-34'):
+            for task in tasks:
+                if (task.task_json["name"] == 'inside_temp'):
+                    temp = float(temp)
+                    task.save_add_temp(temp)
+                    return "Yay"
+            return "almost"                
+        return "OH NO!"            
 
 def secureheaders():
     headers = cherrypy.response.headers
@@ -74,7 +89,7 @@ def generate_frontend_local(tasks):
             f.write('</tr>')
         
         f.write('</table>')
-        f.write('<br><br><a href="/">Reload</a> . . . . . . . <a href="temperatures">Temp Graph</a> . . . . .  . . . . . <a href="co2">CO2 Graph</a>')
+        f.write('<br><br><a href="/">Reload</a> . . . . . . . <a href="temperatures">Temp Graph</a> . . . . .  . . . . . <a href="co2">CO2 Graph</a> . . . . . . . <a href="temperatures_long">Temp Graph Long</a>')
         f.write('<br><br>')
         f.write('</body></html>')
 

@@ -45,7 +45,14 @@ class IndoorTempPressTask(BaseTask):
         request = ("INSERT INTO `environment` (`uid`, `datetime`, `value`, `type`, `description`, `unit`) "
                     "VALUES (NULL, '%s','%f','3','inside_press','degC')" % (now, tnp[1]))
         IssueSqlRequest(request)
-
+        
+    def save_add_temp(self, temp):
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        request = ("INSERT INTO `environment` (`uid`, `datetime`, `value`, `type`, `description`, `unit`) "
+                    "VALUES (NULL, '%s','%f','5','bedroom_temp','degC')" % (now, temp))
+        IssueSqlRequest(request)
+        print("New additional temperature: %f" % (temp))
+        
 class IndoorCO2(BaseTask):
     """
     Task to read serial data from attached C02 sensor
