@@ -1,6 +1,7 @@
 import datetime #NOTE: All function time/date calls should use UTC
 import threading
 import json
+import logging
 from time import sleep
 
 class BaseTask():
@@ -105,7 +106,11 @@ class BaseTask():
         """ The class's main thread, loops constantly """
         while(True):
             if(self._should_run()):
-                self._intern_funct()
+                try: 
+                    self._intern_funct()
+                except Exception as e:
+                    logging.error(f"Task Run error: {self.task_json}\n{e}")
+
                 self.last_run = datetime.datetime.utcnow()
                 self._calc_next_run()
             sleep(61)#seconds

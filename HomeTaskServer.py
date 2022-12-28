@@ -3,6 +3,7 @@ import cherrypy
 import datetime
 import sys
 import importlib
+import logging
 import subprocess
 from os import path
 
@@ -117,7 +118,11 @@ def load_tasks():
             print("Error importing %s: %s" % task_info["tasks"][i]["module"], e)
 
 def start_local_server():
-    # Start our local server and hope for the best
+    ''' Start our local server and hope for the best '''
+
+    new_log_file = f"{datetime.datetime.now()}.log"
+    log_format='%(asctime)s %(levelname)s:%(message)s'
+    logging.basicConfig(filename=new_log_file, format=log_format, level=logging.DEBUG)
     load_tasks()
     start_all_tasks()
     generate_frontend_local(tasks)
