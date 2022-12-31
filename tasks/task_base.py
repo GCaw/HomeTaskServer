@@ -90,7 +90,6 @@ class BaseTask():
     def _should_run(self):
         """ Check if we are supposed to run now """
         now = datetime.datetime.utcnow()
-        #print("next: %s now: %s" % (str(self.next_run), str(now)))
         
         if (not self.paused):
             if (self.run_now):

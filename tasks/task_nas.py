@@ -1,4 +1,5 @@
 
+import logging
 import ping3
 import paramiko
 from wakeonlan import send_magic_packet
@@ -26,16 +27,15 @@ class NasWake(BaseTask):
             try:
                 r = ping3.ping(NAS_IP_ADDRESS)
             except Exception as e:
-                print(e)
+                logging.error(f"Ping failure: {e}")
                 attemps = 3
                 r = None
 
-            if ((not r)
-            or (r == False)):
+            if ((r is None) or (r == False)):
                 # couldn't contact NAS
                 self.last_result = "No response from NAS"
                 attempts += 1
-                if (attempts == 3):
+                if (attempts >= 3):
                     # we time out and give up
                     not_awake = False
             else:
@@ -46,6 +46,7 @@ class NasWake(BaseTask):
 class NasCheckSmart(BaseTask):
     """
     Task to check NAS SMART data
+    TODO: this is nto working yet
     """
     def _add_init(self):
         """ Run additional startup tasks so as not to override init in child """
@@ -96,4 +97,4 @@ class NasShutdown(BaseTask):
             self.last_result = res
         except TimeoutError as e:
             self.last_result = "Timeout on shutdown attempt"
-            print(e)
+            logging.error(f"Timeout during shutdown attempt: {e}")

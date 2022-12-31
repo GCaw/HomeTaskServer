@@ -1,3 +1,4 @@
+import logging
 import requests
 import mysql.connector
 import smtplib
@@ -35,8 +36,7 @@ def IssueSqlRequest(request):
         mycursor.execute(request)
         res = mycursor.rowcount
     except Exception as e:
-        print("SQL Request error: ")
-        print(e)
+        logging.error(f"SQL Request error: {e}")
         res = None
 
     return res
@@ -55,8 +55,7 @@ def SelectSqlRequest(request):
         res = mycursor.fetchall()
 
     except Exception as e:
-        print("SQL Request error: ")
-        print(e)
+        logging.error(f"SQL Request error: {e}")
         res = None
 
     return res
@@ -83,14 +82,7 @@ def SendMail(recipient, subject, content):
         res = True
 
     except Exception as e:
-        print("Error sending email")
-        print(e)
+        logging.error(f"Error sending email: {e}")
         res = None
 
     return res
-
-
-
-if __name__ == '__main__':
-    x = IssueSqlRequest('SELECT * FROM `environment`')
-    print(x)

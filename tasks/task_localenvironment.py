@@ -1,4 +1,4 @@
-import json
+import logging
 import serial
 from datetime import datetime
 
@@ -29,14 +29,15 @@ class IndoorTempPressTask(BaseTask):
             self.last_result = "Inside Temp: %.1f\nInside Press: %.1f" % (t_and_p[0], t_and_p[1])
         except Exception as e:
             self.last_result = "Inside TempPress: Error accessing bmp180 sensor"
-            print (e)
+            logging.error(f"TempPress result {e}")
         
         if t_and_p:
             self._save_temp_press(t_and_p)
 
-        print(self.last_result)
+        logging.info(f"TempPress result: {self.last_result}")
         
     def _save_temp_press(self, tnp):
+        ''' tnp should be array where first value is temperature and second value is pressure'''
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         request = ("INSERT INTO `environment` (`uid`, `datetime`, `value`, `type`, `description`, `unit`) "
                     "VALUES (NULL, '%s','%f','1','inside_temp','degC')" % (now, tnp[0]))
@@ -45,13 +46,6 @@ class IndoorTempPressTask(BaseTask):
         request = ("INSERT INTO `environment` (`uid`, `datetime`, `value`, `type`, `description`, `unit`) "
                     "VALUES (NULL, '%s','%f','3','inside_press','degC')" % (now, tnp[1]))
         IssueSqlRequest(request)
-        
-    def save_add_temp(self, temp):
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        request = ("INSERT INTO `environment` (`uid`, `datetime`, `value`, `type`, `description`, `unit`) "
-                    "VALUES (NULL, '%s','%f','5','bedroom_temp','degC')" % (now, temp))
-        IssueSqlRequest(request)
-        print("New additional temperature: %f" % (temp))
         
 class IndoorCO2(BaseTask):
     """
@@ -79,16 +73,14 @@ class IndoorCO2(BaseTask):
 
         except Exception as e:
             co2 = 0
-            print("CO2 Serial error")
-            print(e)
+            logging.error(f"CO2 Serial error: {e}")
 
         try:
             ser.close()
         except Exception as e:
-            print("CO2 Serial error")
-            print(e)
+            logging.error(f"CO2 Serial error: {e}")
 
-        print("CO2 sensor: %s" % (co2))
+        logging.info(f"CO2 sensor: {co2}")
 
         return co2
 

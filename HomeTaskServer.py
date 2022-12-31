@@ -8,6 +8,7 @@ import subprocess
 from os import path
 
 from tasks.task_base import BaseTask
+from tasks.config import WIFI_TEMP_KEY, GARAGE_STATUS_KEY
 
 CHERRY_SERVER_CFG = path.join("config","cherry_config.conf")
 TASK_JSON_CFG = path.join("config","task_config.json")
@@ -37,6 +38,10 @@ class LocalFrontEnd:
     @cherrypy.expose
     def temperatures(self):
         return open(path.join("generated_files","temperatures.html"))
+
+    @cherrypy.expose
+    def pressure(self):
+        return open(path.join("generated_files","pressures.html"))
     
     @cherrypy.expose
     def temperatures_long(self):
@@ -47,15 +52,23 @@ class LocalFrontEnd:
         return open(path.join("generated_files","co2.html"))
     
     @cherrypy.expose
-    def record_temp(self, temp, crypto):
-        if (crypto == 'aawqpeiorj2590-34'):
+    def garage(self):
+        return open(path.join("generated_files","open_garage.html"))
+
+    @cherrypy.expose
+    def record_data(self, type, key, data):
+        ''' allow wifi thermometer to report temperatures '''
+        logging.info(f"Data request from external - {type} {data}")
+        if (key == WIFI_TEMP_KEY and type == "TEMP") or (key == GARAGE_STATUS_KEY and type == "GRGST"):
             for task in tasks:
-                if (task.task_json["name"] == 'inside_temp'):
-                    temp = float(temp)
-                    task.save_add_temp(temp)
-                    return "Yay"
-            return "almost"                
-        return "OH NO!"            
+                if (task.task_json["name"] == 'webtasks'):
+                    task.save_data(type, data)
+                    return "SUCCESS"
+            logging.warn(f"Couldn't find task 'webtasks'")
+            return "ERROR - task not running"
+
+        logging.warn(f"Invalid Key and Type provided")
+        return "ERROR - invalid key/type combo provided"            
 
 def secureheaders():
     headers = cherrypy.response.headers
@@ -80,7 +93,8 @@ def generate_frontend_local(tasks):
             f.write('<td>%s</td>' % tasks[i].task_json["name"])
             f.write('<td>%s</td>' % tasks[i].next_run)
             f.write('<td>%s</td>' % tasks[i].last_run)
-            f.write('<td>%s</td>' % tasks[i].last_result)
+            to_print = str(tasks[i].last_result)
+            f.write('<td>%s</td>' % to_print.replace("\n","<br>"))
             if (tasks[i].paused):
                 f.write('<td>paused</td>')
             else:
@@ -90,7 +104,8 @@ def generate_frontend_local(tasks):
             f.write('</tr>')
         
         f.write('</table>')
-        f.write('<br><br><a href="/">Reload</a> . . . . . . . <a href="temperatures">Temp Graph</a> . . . . .  . . . . . <a href="co2">CO2 Graph</a> . . . . . . . <a href="temperatures_long">Temp Graph Long</a>')
+        f.write('<br><br><a href="/">Reload</a>')
+        f.write('<br><a href="temperatures">Temp Graph</a> . . . . .  . . . . . <a href="co2">CO2 Graph</a> . . . . . . . <a href="temperatures_long">Temp Graph Long</a> . . . . . . . <a href="pressure">Pressures Graph</a>')
         f.write('<br><br>')
         f.write('</body></html>')
 
@@ -114,15 +129,22 @@ def load_tasks():
             tasks.append(task(task_info["tasks"][i]))
 
         except Exception as e:
+            print_n_log(logging.ERROR, f"Error importing {task_info['tasks'][i]['module']}: {e}")
             tasks.append(BaseTask(task_info["tasks"][i]["name"]))
-            print("Error importing %s: %s" % task_info["tasks"][i]["module"], e)
+
+def print_n_log(level, message):
+    logging.log(level, message)
+    print(message)
+
+def setup_logging():
+    new_log_file = f"{datetime.datetime.now()}.log"
+    log_format='%(asctime)s|%(levelname)s|%(pathname)s|%(message)s'
+    logging.basicConfig(filename=new_log_file, format=log_format, level=logging.INFO)
 
 def start_local_server():
     ''' Start our local server and hope for the best '''
 
-    new_log_file = f"{datetime.datetime.now()}.log"
-    log_format='%(asctime)s %(levelname)s:%(message)s'
-    logging.basicConfig(filename=new_log_file, format=log_format, level=logging.DEBUG)
+    setup_logging()
     load_tasks()
     start_all_tasks()
     generate_frontend_local(tasks)
@@ -137,5 +159,5 @@ if __name__ == '__main__':
         if (sys.argv[i] == "--expose"):
             p = subprocess.Popen(['python', 'HomeTaskServerExtern.py'])
                 
-    print("Starting Local Server")
+    print_n_log(logging.INFO, "Starting Local Server")
     start_local_server()

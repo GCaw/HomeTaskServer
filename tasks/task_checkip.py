@@ -1,4 +1,5 @@
 from os import path
+import logging
 
 from tasks.task_base import BaseTask
 from tasks.helper import IssueHttpRequest, SendMail
@@ -15,7 +16,6 @@ class UpdateIP(BaseTask):
 
     def CheckIpAddress(self):
         res = IssueHttpRequest(IP_CHECKER_URL)
-        print(self.last_result)
 
         with open(path.join("tasks","web_ip.txt"), "r") as f:
             old = f.read()
@@ -32,3 +32,5 @@ class UpdateIP(BaseTask):
                     self.last_result = "Failed to send new IP: %s" % res.text
             else:
                 self.last_result = ("Current IP maintained: %s" % old)
+
+        logging.info(f"{self.last_result}")

@@ -1,3 +1,4 @@
+import logging
 import smbus
 from time import sleep
 
@@ -31,7 +32,7 @@ class bmp180:
         value = (val1 << 8) + val2
 
         if (value == 0 or value == 65535):
-            print("error" + vari + " = " + str(value))
+            logging.error(f"error {vari} = {value}")
 
         #shoddy way to convert if it's supposed to be a negative number
         if ((value >= 32768) and signed):

@@ -18,6 +18,15 @@
 		"end": null,
 		"days": [1,1,1,1,1,1,1]
     },
+	{
+		"name": "plot_data",
+		"class": "PlotDataTask",
+		"module": "tasks.task_plotdata",
+		"freq": "20",
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+    },
     {
 		"name": "inside_c02",
 		"class": "IndoorCO2",
@@ -58,6 +67,16 @@
 		"name": "check_extern_ip",
 		"class": "UpdateIP",
 		"module": "tasks.task_checkip",
+		"freq": 30,
+		"start": null,
+		"end": null,
+		"days": [1,1,1,1,1,1,1]
+	}
+	,
+	{
+		"name": "webtasks",
+		"class": "WebTasksTask",
+		"module": "tasks.task_webtasks",
 		"freq": 30,
 		"start": null,
 		"end": null,
